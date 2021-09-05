@@ -206,7 +206,10 @@ class ChatActivity : AppCompatActivity() {
 
         // when camera button is clicked
         binding.idClick.setOnClickListener {
-            startActivity(Intent(this, CameraActivity::class.java))
+            val intent = Intent(this, CameraActivity::class.java)
+            intent.putExtra("senderRoom", senderRoom)
+            intent.putExtra("receiverRoom", receiverRoom)
+            startActivity(intent)
         }
     }
 

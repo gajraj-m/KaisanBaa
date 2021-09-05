@@ -14,7 +14,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.KaisanBaa"
         android:usesCleartextTraffic="true">
-        <activity android:name=".Activities.CameraActivity"></activity>
+        <activity android:name=".Activities.ClickViewActivity"></activity>
+        <activity android:name=".Activities.CameraActivity" />
         <activity android:name=".Activities.CameraApplication" />
         <activity android:name=".Activities.SettingsActivity" />
         <activity android:name=".Activities.ImageViewActivity" />

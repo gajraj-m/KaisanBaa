@@ -33,7 +33,8 @@ typealias LumaListener = (luma: Double) -> Unit
 class CameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
-
+    private lateinit var senderRoom : String
+    private lateinit var receiverRoom : String
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var database: FirebaseDatabase
@@ -68,6 +69,11 @@ class CameraActivity : AppCompatActivity() {
         // initialize firebase stuff
         database = FirebaseDatabase.getInstance()
         storage = FirebaseStorage.getInstance()
+
+        //sender receiver room
+        senderRoom = intent.getStringExtra("senderRoom")!!
+        receiverRoom = intent.getStringExtra("receiverRoom")!!
+
         // Request camera permissions
         if (allPermissionsGranted()) {
             startCamera()
@@ -112,58 +118,64 @@ class CameraActivity : AppCompatActivity() {
 //                    intent.putExtra("imageUri", savedUri)
 //                    startActivity(intent)
 
-                    // Firebase update
-                    val reference : StorageReference = storage.reference.child("chats").child(
-                        calendar.timeInMillis.toString()
-                    )
-                    reference.putFile(selectedImage).addOnCompleteListener{
-                        if(it.isSuccessful){
-                            dialog.dismiss()
-                            //if upload is successful, download the image from that url and proceed to put it into realtime database
-                            reference.downloadUrl.addOnSuccessListener {
-                                val filePath = it.toString()
-                                val date = Date()
-                                // nodes of same message in both sender and receiver room must be same to read conveniently
-                                val randomKey = database.reference.push().key
-                                val message = Message(
-                                    randomKey,
-                                    "Photo",
-                                    senderUid,
-                                    date.time,
-                                    0,
-                                    filePath
-                                )
-                                binding.idTypemsg.setText("")
-
-                                val lastMsgObj : HashMap<String, Any> = HashMap ()
-                                lastMsgObj.put("lastMsg", message.msg!!)
-                                lastMsgObj.put("lastMsgTime", date.time)
-                                database.reference.child("chats").child(senderRoom).updateChildren(
-                                    lastMsgObj
-                                )
-                                database.reference.child("chats").child(receiverRoom).updateChildren(
-                                    lastMsgObj
-                                )
-
-                                database.reference
-                                    .child("chats")
-                                    .child(senderRoom)
-                                    .child("message")
-                                    .child(randomKey!!)
-                                    .setValue(message).addOnSuccessListener {
-                                        database.reference
-                                            .child("chats")
-                                            .child(receiverRoom)
-                                            .child("message")
-                                            .child(randomKey)
-                                            .setValue(message)
-                                    }
-                            }
-                        }
-                    }
+//                    // Firebase update
+//                    val reference : StorageReference = storage.reference.child("chats").child(
+//                        calendar.timeInMillis.toString()
+//                    )
+//                    reference.putFile(selectedImage).addOnCompleteListener{
+//                        if(it.isSuccessful){
+//                            dialog.dismiss()
+//                            //if upload is successful, download the image from that url and proceed to put it into realtime database
+//                            reference.downloadUrl.addOnSuccessListener {
+//                                val filePath = it.toString()
+//                                val date = Date()
+//                                // nodes of same message in both sender and receiver room must be same to read conveniently
+//                                val randomKey = database.reference.push().key
+//                                val message = Message(
+//                                    randomKey,
+//                                    "Photo",
+//                                    senderUid,
+//                                    date.time,
+//                                    0,
+//                                    filePath
+//                                )
+//                                binding.idTypemsg.setText("")
+//
+//                                val lastMsgObj : HashMap<String, Any> = HashMap ()
+//                                lastMsgObj.put("lastMsg", message.msg!!)
+//                                lastMsgObj.put("lastMsgTime", date.time)
+//                                database.reference.child("chats").child(senderRoom).updateChildren(
+//                                    lastMsgObj
+//                                )
+//                                database.reference.child("chats").child(receiverRoom).updateChildren(
+//                                    lastMsgObj
+//                                )
+//
+//                                database.reference
+//                                    .child("chats")
+//                                    .child(senderRoom)
+//                                    .child("message")
+//                                    .child(randomKey!!)
+//                                    .setValue(message).addOnSuccessListener {
+//                                        database.reference
+//                                            .child("chats")
+//                                            .child(receiverRoom)
+//                                            .child("message")
+//                                            .child(randomKey)
+//                                            .setValue(message)
+//                                    }
+//                            }
+//                        }
+//                    }
                     val imageView : ConstraintLayout = findViewById(R.id.preview_layout)
                     imageView.visibility = View.VISIBLE
                     Glide.with(this@CameraActivity).load(savedUri).into(findViewById(R.id.image_preview))
+
+//                    val intent = Intent(this@CameraActivity, ClickViewActivity::class.java)
+//                    intent.putExtra("imageUri", savedUri.toString().substring(7)) // to exclude file:// prefix
+//                    intent.putExtra("senderRoom", senderRoom)
+//                    intent.putExtra("receiverRoom", receiverRoom)
+//                    startActivity(intent)
                 }
             })
     }
