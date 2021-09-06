@@ -1,6 +1,7 @@
 package com.example.kaisanbaa.Activities
 
 import android.Manifest
+import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -8,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.camera.core.*
@@ -33,8 +35,8 @@ typealias LumaListener = (luma: Double) -> Unit
 class CameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
-    private lateinit var senderRoom : String
-    private lateinit var receiverRoom : String
+    private lateinit var senderUid : String
+    private lateinit var receiverUid : String
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var database: FirebaseDatabase
@@ -71,8 +73,8 @@ class CameraActivity : AppCompatActivity() {
         storage = FirebaseStorage.getInstance()
 
         //sender receiver room
-        senderRoom = intent.getStringExtra("senderRoom")!!
-        receiverRoom = intent.getStringExtra("receiverRoom")!!
+        senderUid = intent.getStringExtra("senderUid")!!
+        receiverUid = intent.getStringExtra("receiverUid")!!
 
         // Request camera permissions
         if (allPermissionsGranted()) {
@@ -113,69 +115,71 @@ class CameraActivity : AppCompatActivity() {
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     val savedUri = Uri.fromFile(photoFile)
-                    val imageString = savedUri.toString().substring(7)
-//                    val intent = Intent(this@CameraActivity, ImageViewActivity::class.java)
-//                    intent.putExtra("imageUri", savedUri)
-//                    startActivity(intent)
-
-//                    // Firebase update
-//                    val reference : StorageReference = storage.reference.child("chats").child(
-//                        calendar.timeInMillis.toString()
-//                    )
-//                    reference.putFile(selectedImage).addOnCompleteListener{
-//                        if(it.isSuccessful){
-//                            dialog.dismiss()
-//                            //if upload is successful, download the image from that url and proceed to put it into realtime database
-//                            reference.downloadUrl.addOnSuccessListener {
-//                                val filePath = it.toString()
-//                                val date = Date()
-//                                // nodes of same message in both sender and receiver room must be same to read conveniently
-//                                val randomKey = database.reference.push().key
-//                                val message = Message(
-//                                    randomKey,
-//                                    "Photo",
-//                                    senderUid,
-//                                    date.time,
-//                                    0,
-//                                    filePath
-//                                )
-//                                binding.idTypemsg.setText("")
-//
-//                                val lastMsgObj : HashMap<String, Any> = HashMap ()
-//                                lastMsgObj.put("lastMsg", message.msg!!)
-//                                lastMsgObj.put("lastMsgTime", date.time)
-//                                database.reference.child("chats").child(senderRoom).updateChildren(
-//                                    lastMsgObj
-//                                )
-//                                database.reference.child("chats").child(receiverRoom).updateChildren(
-//                                    lastMsgObj
-//                                )
-//
-//                                database.reference
-//                                    .child("chats")
-//                                    .child(senderRoom)
-//                                    .child("message")
-//                                    .child(randomKey!!)
-//                                    .setValue(message).addOnSuccessListener {
-//                                        database.reference
-//                                            .child("chats")
-//                                            .child(receiverRoom)
-//                                            .child("message")
-//                                            .child(randomKey)
-//                                            .setValue(message)
-//                                    }
-//                            }
-//                        }
-//                    }
                     val imageView : ConstraintLayout = findViewById(R.id.preview_layout)
+                    val shutter : ImageButton = findViewById(R.id.camera_capture_button)
+                    val calendar = Calendar.getInstance()
                     imageView.visibility = View.VISIBLE
+                    shutter.visibility = View.GONE
                     Glide.with(this@CameraActivity).load(savedUri).into(findViewById(R.id.image_preview))
 
-//                    val intent = Intent(this@CameraActivity, ClickViewActivity::class.java)
-//                    intent.putExtra("imageUri", savedUri.toString().substring(7)) // to exclude file:// prefix
-//                    intent.putExtra("senderRoom", senderRoom)
-//                    intent.putExtra("receiverRoom", receiverRoom)
-//                    startActivity(intent)
+                    send_button.setOnClickListener {
+                        val dialog = ProgressDialog(this@CameraActivity)
+                        dialog.setMessage("Uploading image...")
+                        dialog.setCancelable(false)
+                        dialog.show()
+                        // Firebase update
+                    val reference : StorageReference = storage.reference.child("chats").child(
+                        calendar.timeInMillis.toString()
+                    )
+                    reference.putFile(savedUri).addOnCompleteListener{
+                        if(it.isSuccessful){
+                            dialog.dismiss()
+                            //if upload is successful, download the image from that url and proceed to put it into realtime database
+                            reference.downloadUrl.addOnSuccessListener {
+                                val filePath = it.toString()
+                                val date = Date()
+                                // nodes of same message in both sender and receiver room must be same to read conveniently
+                                val randomKey = database.reference.push().key
+                                val message = Message(
+                                    randomKey,
+                                    "Photo",
+                                    senderUid,
+                                    date.time,
+                                    0,
+                                    filePath
+                                )
+
+                                val lastMsgObj : HashMap<String, Any> = HashMap ()
+                                lastMsgObj.put("lastMsg", message.msg!!)
+                                lastMsgObj.put("lastMsgTime", date.time)
+                                database.reference.child("chats").child(senderUid+receiverUid).updateChildren(
+                                    lastMsgObj
+                                )
+                                database.reference.child("chats").child(receiverUid+senderUid).updateChildren(
+                                    lastMsgObj
+                                )
+
+                                database.reference
+                                    .child("chats")
+                                    .child(senderUid+receiverUid)
+                                    .child("message")
+                                    .child(randomKey!!)
+                                    .setValue(message).addOnSuccessListener {
+                                        database.reference
+                                            .child("chats")
+                                            .child(receiverUid+senderUid)
+                                            .child("message")
+                                            .child(randomKey)
+                                            .setValue(message)
+                                    }.addOnSuccessListener {
+                                            imageView.visibility = View.GONE
+                                            shutter.visibility = View.VISIBLE
+                                            finish()
+                                        }
+                            }
+                        }
+                    }
+                    }
                 }
             })
     }
