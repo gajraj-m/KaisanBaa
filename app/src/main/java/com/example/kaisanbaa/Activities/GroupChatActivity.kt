@@ -30,6 +30,7 @@ class GroupChatActivity : AppCompatActivity() {
     private lateinit var storage: FirebaseStorage
     private lateinit var binding : ActivityGroupChatBinding
     private  var senderUid : String? = FirebaseAuth.getInstance().uid
+    private var emojiIcon = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +55,14 @@ class GroupChatActivity : AppCompatActivity() {
         emojiPopup.isShowing // Returns true when Popup is showing.
         // Emoji button is clicked
         binding.idEmoji.setOnClickListener {
+            if(emojiIcon){
+                binding.idEmoji.setImageResource(R.drawable.keyboard)
+                emojiIcon = false
+            }
+            else{
+                binding.idEmoji.setImageResource(R.drawable.emoji_ios_category_smileysandpeople)
+                emojiIcon = true
+            }
             emojiPopup.toggle() // Toggles visibility of the Popup.
         }
 
@@ -75,6 +84,14 @@ class GroupChatActivity : AppCompatActivity() {
             intent.setAction(Intent.ACTION_GET_CONTENT)
             intent.setType("image/*")
             startActivityForResult(intent, 25)
+        }
+
+        // when camera button is clicked
+        binding.idClick.setOnClickListener {
+            val intent = Intent(this, CameraActivity::class.java)
+            intent.putExtra("senderUid", senderUid)
+           // intent.putExtra("receiverUid", receiverUid)
+            startActivity(intent)
         }
 
         // read chats from realtime database

@@ -67,6 +67,7 @@ class CameraActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
+        supportActionBar?.hide()
 
         // initialize firebase stuff
         database = FirebaseDatabase.getInstance()
@@ -124,7 +125,7 @@ class CameraActivity : AppCompatActivity() {
 
                     send_button.setOnClickListener {
                         val dialog = ProgressDialog(this@CameraActivity)
-                        dialog.setMessage("Uploading image...")
+                        dialog.setMessage("Sending image...")
                         dialog.setCancelable(false)
                         dialog.show()
                         // Firebase update
@@ -148,7 +149,7 @@ class CameraActivity : AppCompatActivity() {
                                     0,
                                     filePath
                                 )
-
+                                // Making a Hash map to update the last messages details... updateChildren( ) takes hash map in arg
                                 val lastMsgObj : HashMap<String, Any> = HashMap ()
                                 lastMsgObj.put("lastMsg", message.msg!!)
                                 lastMsgObj.put("lastMsgTime", date.time)
