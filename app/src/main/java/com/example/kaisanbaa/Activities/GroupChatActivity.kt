@@ -87,12 +87,12 @@ class GroupChatActivity : AppCompatActivity() {
         }
 
         // when camera button is clicked
-        binding.idClick.setOnClickListener {
-            val intent = Intent(this, CameraActivity::class.java)
-            intent.putExtra("senderUid", senderUid)
-           // intent.putExtra("receiverUid", receiverUid)
-            startActivity(intent)
-        }
+//        binding.idClick.setOnClickListener {
+//            val intent = Intent(this, CameraActivity::class.java)
+//            intent.putExtra("senderUid", senderUid)
+//           // intent.putExtra("receiverUid", receiverUid)
+//            startActivity(intent)
+//        }
 
         // read chats from realtime database
         database.reference.child("public")
@@ -114,7 +114,7 @@ class GroupChatActivity : AppCompatActivity() {
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-                        TODO("Not yet implemented")
+
                     }
 
                 })
