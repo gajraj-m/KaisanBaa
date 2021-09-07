@@ -149,34 +149,48 @@ class CameraActivity : AppCompatActivity() {
                                     0,
                                     filePath
                                 )
-                                // Making a Hash map to update the last messages details... updateChildren( ) takes hash map in arg
-                                val lastMsgObj : HashMap<String, Any> = HashMap ()
-                                lastMsgObj.put("lastMsg", message.msg!!)
-                                lastMsgObj.put("lastMsgTime", date.time)
-                                database.reference.child("chats").child(senderUid+receiverUid).updateChildren(
-                                    lastMsgObj
-                                )
-                                database.reference.child("chats").child(receiverUid+senderUid).updateChildren(
-                                    lastMsgObj
-                                )
 
-                                database.reference
-                                    .child("chats")
-                                    .child(senderUid+receiverUid)
-                                    .child("message")
-                                    .child(randomKey!!)
-                                    .setValue(message).addOnSuccessListener {
-                                        database.reference
+                                if(receiverUid != "") {
+                                    // Making a Hash map to update the last messages details... updateChildren( ) takes hash map in arg
+                                    val lastMsgObj: HashMap<String, Any> = HashMap()
+                                    lastMsgObj.put("lastMsg", message.msg!!)
+                                    lastMsgObj.put("lastMsgTime", date.time)
+                                    database.reference.child("chats").child(senderUid + receiverUid).updateChildren(
+                                            lastMsgObj
+                                    )
+                                    database.reference.child("chats").child(receiverUid + senderUid).updateChildren(
+                                            lastMsgObj
+                                    )
+
+                                    database.reference
                                             .child("chats")
-                                            .child(receiverUid+senderUid)
+                                            .child(senderUid + receiverUid)
                                             .child("message")
-                                            .child(randomKey)
+                                            .child(randomKey!!)
+                                            .setValue(message).addOnSuccessListener {
+                                                database.reference
+                                                        .child("chats")
+                                                        .child(receiverUid + senderUid)
+                                                        .child("message")
+                                                        .child(randomKey)
+                                                        .setValue(message)
+                                            }.addOnSuccessListener {
+                                                imageView.visibility = View.GONE
+                                                shutter.visibility = View.VISIBLE
+                                                finish()
+                                            }
+                                }
+                                else{
+                                    database.reference
+                                            .child("public")
+                                            .push()
                                             .setValue(message)
-                                    }.addOnSuccessListener {
-                                            imageView.visibility = View.GONE
-                                            shutter.visibility = View.VISIBLE
-                                            finish()
-                                        }
+                                            .addOnSuccessListener {
+                                                imageView.visibility = View.GONE
+                                                shutter.visibility = View.VISIBLE
+                                                finish()
+                                            }
+                                }
                             }
                         }
                     }
