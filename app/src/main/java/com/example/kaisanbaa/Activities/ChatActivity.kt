@@ -8,10 +8,12 @@ import android.os.Handler
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.kaisanbaa.Adapters.MessageAdapter
 import com.example.kaisanbaa.Models.Message
+import com.example.kaisanbaa.Models.User
 import com.example.kaisanbaa.R
 import com.example.kaisanbaa.databinding.ActivityChatBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -36,8 +38,9 @@ class ChatActivity : AppCompatActivity() {
    private lateinit var senderRoom : String
    private lateinit var receiverRoom : String
    private lateinit var binding : ActivityChatBinding
+   private var user = User()
    private  var senderUid : String?=null
-    private var emojiIcon = true
+   private var emojiIcon = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -154,7 +157,7 @@ class ChatActivity : AppCompatActivity() {
 
         // receiver is online or offline?
         database.reference.child("presence").child(receiverUid!!).addValueEventListener(object :
-            ValueEventListener {
+                ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     val presence = snapshot.getValue(String::class.java)
@@ -171,6 +174,32 @@ class ChatActivity : AppCompatActivity() {
             }
 
         })
+
+        //when phone button clicked
+        binding.idCall.setOnClickListener {
+
+            //get receiver's phone number from database and send it to phone dialer already typed
+            FirebaseDatabase.getInstance().reference.child("users").child(receiverUid)
+                    .addValueEventListener(object : ValueEventListener{
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if(snapshot.exists()) {
+                                 user = snapshot.getValue(User::class.java)!!
+                                val phoneNo = user.phone.toString().substring(3)
+                                Toast.makeText(this@ChatActivity, phoneNo, Toast.LENGTH_SHORT).show()
+
+                                val intent = Intent(Intent.ACTION_DIAL)
+                                intent.data = Uri.parse("tel:$phoneNo")
+                                startActivity(intent)
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            TODO("Not yet implemented")
+                        }
+
+                    })
+
+        }
 
         // I'm typing or not
         val hander = Handler()      // this handler and runnable is to notify when user has stopped typing
@@ -229,7 +258,7 @@ class ChatActivity : AppCompatActivity() {
                     val selectedImage : Uri = data.data!!       // path of selected image
                     val calendar = Calendar.getInstance()
                     val reference : StorageReference = storage.reference.child("chats").child(
-                        calendar.timeInMillis.toString()
+                            calendar.timeInMillis.toString()
                     )
                     reference.putFile(selectedImage).addOnCompleteListener{
                         if(it.isSuccessful){
@@ -241,12 +270,12 @@ class ChatActivity : AppCompatActivity() {
                                 // nodes of same message in both sender and receiver room must be same to read conveniently
                                 val randomKey = database.reference.push().key
                                 val message = Message(
-                                    randomKey,
-                                    "Photo",
-                                    senderUid,
-                                    date.time,
-                                    0,
-                                    filePath
+                                        randomKey,
+                                        "Photo",
+                                        senderUid,
+                                        date.time,
+                                        0,
+                                        filePath
                                 )
                                 binding.idTypemsg.setText("")
 
@@ -254,10 +283,10 @@ class ChatActivity : AppCompatActivity() {
                                 lastMsgObj.put("lastMsg", message.msg!!)
                                 lastMsgObj.put("lastMsgTime", date.time)
                                 database.reference.child("chats").child(senderRoom).updateChildren(
-                                    lastMsgObj
+                                        lastMsgObj
                                 )
                                 database.reference.child("chats").child(receiverRoom).updateChildren(
-                                    lastMsgObj
+                                        lastMsgObj
                                 )
 
                                 database.reference
